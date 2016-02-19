@@ -16,13 +16,12 @@ class FaceMask:
     @staticmethod
     def extract(frame):
         circle = np.zeros_like(frame)
-        cv2.ellipse(circle, (64, 64), (48, 64),0, 0, 360, (255,255,255), thickness=-1)
+        cv2.ellipse(circle, (64, 64), (48, 64), 0, 0, 360, (255, 255, 255), thickness=-1)
         zeroed_frame = np.multiply(frame, circle)
         circle[circle == 0] = 127
         circle[circle == 255] = 0
         zeroed_frame += circle
         return zeroed_frame
-
 
 
 class ImageResize(ImageProcessing):
@@ -36,8 +35,11 @@ class RotateImage(ImageProcessing):
 
     @staticmethod
     def extract(img, angle=0, pivot=(0, 0)):
-        return rotate(img, -angle*180/np.pi, reshape=False)
-
+        padX = [img.shape[1] - pivot[0], pivot[0]]
+        padY = [img.shape[0] - pivot[1], pivot[1]]
+        imgP = np.pad(img, [padY, padX], 'constant')
+        imgR = rotate(imgP, -angle*180/np.pi, reshape=False)
+        return imgR[padY[0] : -padY[1], padX[0] : -padX[1]]
 
 class ContrastEq(ImageProcessing):
 

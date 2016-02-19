@@ -1,7 +1,6 @@
 from imagealgorithms import AlignedImageDetect
-from imageprocessing import ProcessingError
 from imagealgorithms import AlgorithmError
-from util import VideoCamera
+from camera import VideoCamera
 import cv2
 import os
 

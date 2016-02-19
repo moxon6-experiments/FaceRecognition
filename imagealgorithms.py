@@ -2,7 +2,7 @@ import cv2
 import config
 import numpy as np
 from imageprocessing import RotateImage, ImageResize, GreyScale, GaussianBlur,\
-    GammaCorrect, GaussianDifference, ContrastEq, FaceMask
+    GammaCorrect, GaussianDifference, ContrastEq
 from skimage.feature import local_binary_pattern
 from uniform import get_uniform_value
 import os
@@ -24,11 +24,11 @@ class EyeDetect(ImageAlgorithm):
         eyes = cls.eye_cascade.detectMultiScale(face)
         eyes = list(eyes)
         if len(eyes) == 2:
-            eyes.sort(key=lambda x: x[0])
+            eyes.sort(key=lambda eye_coord: eye_coord[0])
             eye_positions = []
             for eye in eyes:
-                eyex, eyey, eyewidth, eyeheight = eye
-                eye_position = [eyex+0.5*eyewidth+x, eyey+0.5*eyeheight+y]
+                eye_x, eye_y, eye_width, eye_height = eye
+                eye_position = [eye_x+0.5*eye_width+x, eye_y+0.5*eye_height+y]
                 eye_position = np.array(eye_position).astype(np.int)
                 eye_positions.append(eye_position)
 
@@ -59,7 +59,7 @@ class AlignEyes(ImageAlgorithm):
 
         cropped_rotated = rotated_image[y_position:y_position+size, x_position:x_position+size]
 
-        if cropped_rotated.shape[0]*cropped_rotated.shape[1] <=0:
+        if cropped_rotated.shape[0]*cropped_rotated.shape[1] <= 0:
             raise AlgorithmError("Area Must be Positive")
 
         cropped_rotated = ImageResize.extract(cropped_rotated, final_width, final_height)
@@ -72,7 +72,7 @@ class AlignedImageDetect(ImageAlgorithm):
     @staticmethod
     def extract(frame):
         frame = GreyScale.extract(frame)
-        face, (x,y,w,h) = FaceDetect.extract(frame)
+        face, (x, y, w, h) = FaceDetect.extract(frame)
         eye_left, eye_right = EyeDetect.extract(face, x, y)
         fixed_face = AlignEyes.extract(frame, eye_left, eye_right)
 
@@ -93,13 +93,11 @@ class FaceDetect(ImageAlgorithm):
             return face, (x, y, w, h)
 
 
-
 class DenseLBP(ImageAlgorithm):
 
     @staticmethod
-    def extract(aligned_Face):
-        blurred_face = GaussianBlur.extract(aligned_Face)
-        #masked_face = FaceMask.extract(blurred_face)
+    def extract(aligned_face):
+        blurred_face = GaussianBlur.extract(aligned_face)
 
         masked_face = blurred_face
         tantriggs_face = Tantriggs.extract(masked_face)
@@ -112,14 +110,9 @@ class Tantriggs(ImageAlgorithm):
     @staticmethod
     def extract(frame):
         frame = np.array(frame, dtype=np.float32) / 255
-        #cv2.imshow("W1", frame)
         frame = GammaCorrect.extract(frame)
-        #cv2.imshow("W2", frame)
         frame = GaussianDifference.extract(frame*255)
-        #cv2.imshow("W3", frame)
         frame = ContrastEq.extract(frame)
-        #cv2.imshow("W4", frame)
-        #cv2.waitKey(1)
         return frame
 
 
@@ -141,10 +134,18 @@ class BlockWiseBinaryPatternHistogram(ImageAlgorithm):
     @staticmethod
     def extract(image):
 
-        circle = np.zeros((128,128), dtype=np.int)
-        cv2.ellipse(circle, (64, 64), (48, 64),0, 0, 360, (255), thickness=-1)
+        circle = np.zeros((128, 128), dtype=np.int)
+        cv2.ellipse(circle, (64, 64), (48, 64), 0, 0, 360, 1, thickness=-1)
 
-        image = image-image.min()
+
+
+        image2 = np.multiply(image, circle)
+        cv2.imshow("IMAGEIO", image2)
+
+        #print("MAX:", np.max(image))
+        #image2 = np.multiply(image, circle/255)
+        #cv2.imshow("Image2", image)
+        cv2.waitKey(1)
 
         if image.shape[0] != 128 or image.shape[1] != 128:
             raise AlgorithmError("Must be 128x128")
@@ -152,24 +153,23 @@ class BlockWiseBinaryPatternHistogram(ImageAlgorithm):
         total_vectors = 0
         for i in range(21):
             for j in range(21):
-                if np.sum(circle[6*j:6*j+8, 6*i:6*i+8]) == 64 * 255:
+                if np.sum(circle[6*j:6*j+8, 6*i:6*i+8]) == 64:
                     total_vectors += 1
-        #print("Total", total_vectors)
 
         histogram_array = np.zeros((total_vectors, 59), dtype=np.float32)
 
         index = 0
         for i in range(21):
             for j in range(21):
-                if np.sum(circle[6*j:6*j+8, 6*i:6*i+8]) == 64 * 255:
+                if np.sum(circle[6*j:6*j+8, 6*i:6*i+8]) == 64:
                     sub_array = image[6*j:6*j+8, 6*i:6*i+8]
-                    if sub_array.shape[0] != 8 and sub_array.shape[1] != 8:
+                    if sub_array.shape[0] != 8 or sub_array.shape[1] != 8:
                         raise AlgorithmError("SubArray Must be 8x8")
 
                     histogram_array[index] = BinaryPatternHistogram.extract(sub_array)
                     index += 1
         if index != total_vectors:
-            raise AlgorithmError("Invalid Index/Total Values: %s, %s"%(index, total_vectors))
+            raise AlgorithmError("Invalid Index/Total Values: %s, %s" % (index, total_vectors))
         return histogram_array
 
 
@@ -216,7 +216,6 @@ class ProjectionModel(ImageAlgorithm):
             output_vector[start_index:start_index+subvector_dimension] = subvector
             start_index += pca_model.dimension
 
-        print(output_vector.shape)
         return output_vector
 
     def save(self, directory):
@@ -231,7 +230,7 @@ class ProjectionModel(ImageAlgorithm):
         pca_models = []
         for pca_dir in pca_dirs:
             full_dir_path = os.path.join(directory, pca_dir)
-            pca_model = PCA.load(full_dir_path )
+            pca_model = PCA.load(full_dir_path)
             pca_models.append(pca_model)
         return ProjectionModel(pca_models=pca_models)
 
@@ -273,7 +272,6 @@ class PCA:
         self.eigenvectors = eigenvectors
 
         self.retain_variance(0.95)
-
 
     def retain_variance(self, variance):
 

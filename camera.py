@@ -1,9 +1,10 @@
-import random
 import cv2
 import os
 
+
 class FrameException(Exception):
     pass
+
 
 class VideoCamera:
     def __init__(self, camera_id):
@@ -13,7 +14,7 @@ class VideoCamera:
     def read(self):
         ret, frame = self.cam.read()
         if ret:
-            return frame
+            return "Camera", frame
         else:
             raise FrameException
 
@@ -21,8 +22,7 @@ class VideoCamera:
 class FakeCamera:
     def __init__(self, directory):
         self.directory = directory
-        self.full_paths = [os.path.join(directory,x) for x in os.listdir(directory)]
-        self.frame_name = NotImplemented
+        self.full_paths = [os.path.join(directory, x) for x in os.listdir(directory)]
 
         self.i = 0
 
@@ -30,8 +30,8 @@ class FakeCamera:
 
         self.i += 1
         self.i %= len(self.full_paths)
-        self.frame_name = self.full_paths[self.i].split("\\")[-1]
-        return cv2.imread(self.full_paths[self.i])
+        frame_name = self.full_paths[self.i].split("\\")[-1]
+        return frame_name, cv2.imread(self.full_paths[self.i])
 
     def pull(self, name):
         path = os.path.join(self.directory, name)
