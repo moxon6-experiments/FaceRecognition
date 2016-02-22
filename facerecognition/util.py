@@ -1,6 +1,8 @@
-import cv2
 import os
-from imageprocessing import ImageResize
+
+import cv2
+
+from .imageprocessing import ImageResize
 
 
 def display(window_title, image, width=None, height=None):

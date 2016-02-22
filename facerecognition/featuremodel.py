@@ -1,8 +1,10 @@
-from dataset import DataSet
-from resultset import ResultSet
-from imagereader import ImageReader
 import os
-from featurevector import FeatureVector
+
+from .dataset import DataSet
+from .imagereader import ImageReader
+from .resultset import ResultSet
+
+from facerecognition.featurevector import FeatureVector
 
 
 class FeatureModel:

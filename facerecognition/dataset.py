@@ -1,11 +1,12 @@
 import os
-import numpy as np
-import cv2
 
-from imagealgorithms import ProjectionModel, DenseLBP
-from imageprocessing import GreyScale
-from featurevector import FeatureVector
-from imagereader import ImageReader
+import cv2
+import numpy as np
+from .imagealgorithms import ProjectionModel, DenseLBP
+from .imageprocessing import GreyScale
+from .imagereader import ImageReader
+
+from facerecognition.featurevector import FeatureVector
 
 
 class DataSet:

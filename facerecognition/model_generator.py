@@ -1,7 +1,9 @@
-from imagealgorithms import AlignedImageDetect
-from camera import WebCam
-import cv2
 import os
+
+import cv2
+from .imagealgorithms import AlignedImageDetect
+
+from facerecognition.camera import WebCam
 
 
 def main():

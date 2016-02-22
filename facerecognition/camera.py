@@ -1,6 +1,8 @@
-import cv2
 import os
-from imagereader import ImageReader
+
+import cv2
+
+from .imagereader import ImageReader
 
 
 class Camera:

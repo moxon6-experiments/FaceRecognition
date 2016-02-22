@@ -1,11 +1,12 @@
+import os
 import cv2
-import config
 import numpy as np
-from imageprocessing import RotateImage, ImageResize, GreyScale, GaussianBlur,\
+from .imageprocessing import RotateImage, ImageResize, GreyScale, GaussianBlur,\
     GammaCorrect, GaussianDifference, ContrastEq
 from skimage.feature import local_binary_pattern
-from uniform import get_uniform_value
-import os
+from .config import eye_cascade_path, face_cascade_path
+
+from facerecognition.uniform import get_uniform_value
 
 
 class AlgorithmError(Exception):
@@ -17,7 +18,7 @@ class ImageAlgorithm:
 
 
 class EyeDetect(ImageAlgorithm):
-    eye_cascade = cv2.CascadeClassifier(config.eye_cascade_path)
+    eye_cascade = cv2.CascadeClassifier(eye_cascade_path)
 
     @classmethod
     def extract(cls, face, x, y):
@@ -81,7 +82,7 @@ class AlignedImageDetect(ImageAlgorithm):
 
 
 class FaceDetect(ImageAlgorithm):
-    face_cascade = cv2.CascadeClassifier(config.face_cascade_path)
+    face_cascade = cv2.CascadeClassifier(face_cascade_path)
 
     @classmethod
     def extract(cls, frame):
@@ -137,15 +138,6 @@ class BlockWiseBinaryPatternHistogram(ImageAlgorithm):
 
         circle = np.zeros((128, 128), dtype=np.int)
         cv2.ellipse(circle, (64, 64), (48, 64), 0, 0, 360, 1, thickness=-1)
-
-
-
-        #image2 = np.multiply(image, circle)
-        #cv2.imshow("IMAGEIO", image2)
-        #print("MAX:", np.max(image))
-        #image2 = np.multiply(image, circle/255)
-        #cv2.imshow("Image2", image)
-        #cv2.waitKey(1)
 
         if image.shape[0] != 128 or image.shape[1] != 128:
             raise AlgorithmError("Must be 128x128")
