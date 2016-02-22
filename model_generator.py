@@ -1,33 +1,25 @@
 from imagealgorithms import AlignedImageDetect
-from imagealgorithms import AlgorithmError
-from camera import VideoCamera
+from camera import WebCam
 import cv2
 import os
-
-
-class FrameException(Exception):
-    pass
 
 
 def main():
     if not os.path.exists("martin"):
         os.makedirs("martin")
-    cam = VideoCamera(1)
+    cam = WebCam(1)
     image_aligner = AlignedImageDetect()
 
     i = 0
 
     while True:
         try:
-            frame = cam.read()
+            name, frame = cam.read()
             face = image_aligner.extract(frame)
             cv2.imshow("Extracted Face", face)
             cv2.imwrite("martin/Martin_%s.tif" % i, face)
             i += 1
-
-        except FrameException:
-            continue
-        except AlgorithmError:
+        except:
             continue
 
         ch = cv2.waitKey(10)
@@ -36,3 +28,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

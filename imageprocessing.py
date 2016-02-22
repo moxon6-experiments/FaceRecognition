@@ -35,11 +35,12 @@ class RotateImage(ImageProcessing):
 
     @staticmethod
     def extract(img, angle=0, pivot=(0, 0)):
-        padX = [img.shape[1] - pivot[0], pivot[0]]
+        padding_x = [img.shape[1] - pivot[0], pivot[0]]
         padY = [img.shape[0] - pivot[1], pivot[1]]
-        imgP = np.pad(img, [padY, padX], 'constant')
+        imgP = np.pad(img, [padY, padding_x], 'constant')
         imgR = rotate(imgP, -angle*180/np.pi, reshape=False)
-        return imgR[padY[0] : -padY[1], padX[0] : -padX[1]]
+        return imgR[padY[0] : -padY[1], padding_x[0] : -padding_x[1]]
+
 
 class ContrastEq(ImageProcessing):
 

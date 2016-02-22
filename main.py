@@ -1,54 +1,73 @@
-import cv2
-from imagealgorithms import AlgorithmError, AlignedImageDetect
-from camera import VideoCamera, FakeCamera, FrameException
-from featurespace import FeatureSpace
+from imagealgorithms import AlignedImageDetect, AlgorithmError
+from camera import WebCam, FileCamera
+from featuremodel import FeatureModel
+from util import display, get_key, clear
 
 
-class App:
+class FaceRecognitionApp:
     def __init__(self):
 
         self.cameras = self.create_cameras()
-        self.feature_space = FeatureSpace("smallset")
+        self.feature_space = FeatureModel.load("serialised")
+
         self.running = True
+        self.face = None
+        self.frame = None
+
+        self.correct = 0
+        self.false = 0
 
     def main(self):
         while self.running:
-            self.handle_key(cv2.waitKey(10))
+            self.handle_key(get_key(10))
 
-            try:
-                frame_name, frame = self.cameras[0].read()
-            except FrameException:
-                continue
-            try:
-                face = AlignedImageDetect.extract(frame)
-            except AlgorithmError:
-                continue
-            try:
-                items = self.feature_space.nearest(face)
-            except AlgorithmError:
+            result_set = self.get_result_set()
+            display("Camera Frame", self.frame)
+            display("Extracted Face", self.face, width=400, height=400)
+            if result_set is None:
                 continue
 
-            closest_name = items[0][0]
-            closest_distance = items[0][1]
+            closest_distance = result_set.best_result.distance
 
-            if closest_distance < 1950:
-                print("SUCCESS:",
-                      "Frame Name:", frame_name,
-                      "Closest Face:", closest_name,
-                      "Distance", closest_distance)
-            self.show_face(face)
+            if result_set.match:
+                self.correct += 1
+            else:
+                self.false += 1
 
-    @staticmethod
-    def show_face(face):
-        cv2.imshow("Extracted Face", face)
+            print(
+                "Correct:", self.correct, "\n"
+                "False:", self.false, "\n"
+                "Percentage:", self.correct*100.0/(self.correct+self.false), "%"
+            )
+
+            if closest_distance < 2100 or True:
+                clear()
+                result_set.print()
+
+    def get_result_set(self):
+        try:
+            frame_name, self.frame = self.cam.read()
+        except self.cam.FrameException:
+            return None
+        try:
+            self.face = AlignedImageDetect.extract(self.frame)
+            result_set = self.feature_space.get_nearest(frame_name, self.face, 10)
+            return result_set
+        except AlgorithmError:
+            return None
+
+    @property
+    def cam(self):
+        return self.cameras[0]
 
     @staticmethod
     def create_cameras():
         cameras = list()
-        cameras.append(VideoCamera(1))
-        cameras.append(FakeCamera("impostors"))
-        cameras.append(FakeCamera("C:\\faces\\images"))
-        cameras.append(FakeCamera("smallset"))
+        cameras.append(FileCamera("data/original/original_selected_subset"))
+        cameras.append(WebCam(1))
+
+        cameras.append(FileCamera("other/impostors"))
+
         return cameras
 
     def handle_key(self, key):
@@ -58,4 +77,4 @@ class App:
             self.cameras = self.cameras[1:] + [self.cameras[0]]
 
 if __name__ == "__main__":
-    App().main()
+    FaceRecognitionApp().main()

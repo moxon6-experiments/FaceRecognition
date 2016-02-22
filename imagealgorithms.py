@@ -21,7 +21,8 @@ class EyeDetect(ImageAlgorithm):
 
     @classmethod
     def extract(cls, face, x, y):
-        eyes = cls.eye_cascade.detectMultiScale(face)
+
+        eyes = cls.eye_cascade.detectMultiScale(face, scaleFactor=1.2)
         eyes = list(eyes)
         if len(eyes) == 2:
             eyes.sort(key=lambda eye_coord: eye_coord[0])
@@ -84,7 +85,7 @@ class FaceDetect(ImageAlgorithm):
 
     @classmethod
     def extract(cls, frame):
-        faces = cls.face_cascade.detectMultiScale(frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        faces = cls.face_cascade.detectMultiScale(frame, scaleFactor=1.2, minNeighbors=5, minSize=(50, 50))
         if len(faces) == 0:
             raise AlgorithmError("No Faces Detected")
         else:
@@ -139,13 +140,12 @@ class BlockWiseBinaryPatternHistogram(ImageAlgorithm):
 
 
 
-        image2 = np.multiply(image, circle)
-        cv2.imshow("IMAGEIO", image2)
-
+        #image2 = np.multiply(image, circle)
+        #cv2.imshow("IMAGEIO", image2)
         #print("MAX:", np.max(image))
         #image2 = np.multiply(image, circle/255)
         #cv2.imshow("Image2", image)
-        cv2.waitKey(1)
+        #cv2.waitKey(1)
 
         if image.shape[0] != 128 or image.shape[1] != 128:
             raise AlgorithmError("Must be 128x128")
@@ -181,6 +181,8 @@ class ProjectionModel(ImageAlgorithm):
             self.index = 0
             self.num_images = num_images
 
+
+            #TODO
             self.pca_cube = np.zeros((231, 59, num_images), dtype=np.float32)
 
         else:
@@ -197,8 +199,7 @@ class ProjectionModel(ImageAlgorithm):
         return self.index == self.num_images
 
     def generate_models(self):
-        for i in range(self.num_images):
-
+        for i in range(231):
             pca_model = PCA(i, self.pca_cube[i])
             self.pca_models.append(pca_model)
 
@@ -226,12 +227,16 @@ class ProjectionModel(ImageAlgorithm):
 
     @staticmethod
     def load(directory):
-        pca_dirs = os.listdir(directory)
-        pca_models = []
+        pca_dirs = [x for x in os.listdir(directory) if os.path.isdir(directory+"/"+x)]
+        pca_models = [None] * len(pca_dirs)
         for pca_dir in pca_dirs:
+
+            pca_index = int(pca_dir.split("_")[1])
+
             full_dir_path = os.path.join(directory, pca_dir)
             pca_model = PCA.load(full_dir_path)
-            pca_models.append(pca_model)
+            pca_models[pca_index] = pca_model
+
         return ProjectionModel(pca_models=pca_models)
 
 
