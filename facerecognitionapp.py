@@ -1,25 +1,33 @@
 from facerecognition.camera import WebCam, FileCamera
 from facerecognition.facerecmodel import FaceRecognitionModel
 from facerecognition.imagealgorithms import AlignedImageDetect
-from facerecognition.util import display, get_key, clear
+from facerecognition.util import display, get_key
 
 
 class FaceException(Exception):
     pass
 
 
-class FaceRecognitionApp:
+class FaceRecServerStub:
     def __init__(self):
+        pass
 
-        file_camera = FileCamera("data/original/original_selected_subset")
-        web_cam = WebCam(1)
 
+class FaceRecognitionApp:
+    def __init__(self, camera_id, name):
+
+        file_camera = FileCamera("data/original/original")
+        web_cam = WebCam(camera_id)
         self.cameras = [file_camera, web_cam]
+        self.name = name
 
-        self.model = FaceRecognitionModel("serialised", num_images=self.cam.num_images, validation=True)
+        self.model = FaceRecognitionModel("full_feret_serialised",
+                                          num_images=file_camera.num_images,
+                                          validation=False)
         self.display = False
 
     def main(self):
+
         while True:
             try:
                 if self.display:
@@ -30,7 +38,6 @@ class FaceRecognitionApp:
                         self.cameras = self.cameras[1:] + [self.cameras[0]]
 
                 name, frame, face = self.get_face()
-
                 valid = self.model.compare(name, face)
 
                 if self.display:

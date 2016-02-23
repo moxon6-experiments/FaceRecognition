@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class ROCCalculation:
     def __init__(self):
         self.collected_data = []
@@ -56,8 +57,8 @@ class ROCCalculation:
                 continue
 
             if genuine_positive + impostor_negative + genuine_negative + impostor_positive > 0:
-                accuracy = (genuine_positive + impostor_negative)/(genuine_positive + impostor_negative
-                                                                   + genuine_negative + impostor_positive)
+                accuracy = (genuine_positive + impostor_negative)/(genuine_positive + impostor_negative +
+                                                                   genuine_negative + impostor_positive)
             else:
                 continue
 

@@ -2,17 +2,24 @@ from tabulate import tabulate
 
 
 class ResultSet:
-    def __init__(self, subject_name, items):
+    def __init__(self, subject_name, items, num_results):
         self.subject_name = subject_name
+        self.num_result = num_results
 
         header1 = "Subject Name"
         header2 = "Distance"
         self.results = [Result(x) for x in items]
 
         # Lower than 1 is incredibly low, therefore likely same image
-        self.results = [result for result in self.results if result.distance > 0.5]
+        if self.results[0].distance < 0.5:
+            self.results = self.results[1:]
 
-        self.table = tabulate(self.results, headers=[header1, header2])
+        if num_results is not None:
+            results = self.results[:num_results]
+        else:
+            results = self.results
+
+        self.table = tabulate(results, headers=[header1, header2])
 
     def print(self):
         print("___"+self.subject_name+"___")

@@ -4,7 +4,8 @@ from .dataset import DataSet
 from .imagereader import ImageReader
 from .resultset import ResultSet
 
-from facerecognition.featurevector import FeatureVector
+from .featurevector import FeatureVector
+from .imagealgorithms import AlignedImageDetect
 
 
 class FeatureModel:
@@ -23,11 +24,23 @@ class FeatureModel:
     def train_dataset(self, dataset_directory):
         self.feature_vector_map = {}
         image_reader = ImageReader(dataset_directory)
-        for name, img in image_reader:
-            lbp_out = self.dataset.get_lbp(img)
-            feature_vector = self.dataset.extract(lbp_out)
 
-            self.feature_vector_map[name] = feature_vector
+        num_images = image_reader.num_files
+        num_processed = 0
+
+        for name, img in image_reader:
+            num_processed += 1
+            print("Pct Trained", (num_processed*100.0/num_images), "%")
+            try:
+                face = AlignedImageDetect.extract(img)
+                lbp_out = self.dataset.get_lbp(face)
+
+                feature_vector = self.dataset.extract(lbp_out)
+                self.feature_vector_map[name] = feature_vector
+            except AlignedImageDetect.AlgorithmError:
+                continue
+
+
 
     def predict_nearest(self, subject_name, img, num_results=None):
         lbp_vector = self.dataset.get_lbp(img)
@@ -36,15 +49,19 @@ class FeatureModel:
 
         distance_map = {}
 
+
+        if subject_name[:5] not in [x[:5] for x in self.feature_vector_map.keys()]:
+            raise Exception("Not Even There! %s, %s"%(subject_name, self.feature_vector_map.keys()))
+
+
         for vector_name, vector in self.feature_vector_map.items():
             dist = feature_vector.distance(vector)
             distance_map[vector_name] = dist
 
         items = list(distance_map.items())
         items.sort(key=lambda x: x[1])
-        if num_results is not None:
-            items = items[:num_results]
-        return ResultSet(subject_name, items)
+
+        return ResultSet(subject_name, items, num_results)
 
     def save(self, serial_directory):
         self.dataset.save(serial_directory)

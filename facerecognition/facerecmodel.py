@@ -13,6 +13,7 @@ class FaceRecognitionModel:
             self.num_images = None
             self.roc = None
         self.count = 0
+        self.threshold = 92.3
 
     def compare(self, user, face):
         """
@@ -27,8 +28,8 @@ class FaceRecognitionModel:
             self.count += 1
             if self.count == self.num_images:
                 self.roc.save_data()
+        result_set.print()
 
-        if user[:5].lower() == result_set.best_result.name[:5].lower() and result_set.best_result.distance < 89.3:
-            return True
-        else:
-            return False
+        t1 = user[:5].lower() == result_set.best_result.name[:5].lower()
+        t2 = result_set.best_result.distance < self.threshold
+        return t1 and t2

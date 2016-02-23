@@ -2,11 +2,10 @@ import os
 
 import cv2
 import numpy as np
-from .imagealgorithms import ProjectionModel, DenseLBP
+from .imagealgorithms import ProjectionModel, DenseLBP, AlignedImageDetect
 from .imageprocessing import GreyScale
 from .imagereader import ImageReader
-
-from facerecognition.featurevector import FeatureVector
+from .featurevector import FeatureVector
 
 
 class DataSet:
@@ -21,11 +20,14 @@ class DataSet:
     def generate(self, dataset_directory):
         image_reader = ImageReader(dataset_directory)
         num_faces = image_reader.num_files
-
         projection_model = ProjectionModel(num_faces)
         for name, img in image_reader:
-            lbp = self.get_lbp(img)
-            projection_model.add_vector(lbp)
+            try:
+                face = AlignedImageDetect.extract(img)
+                lbp = self.get_lbp(face)
+                projection_model.add_vector(lbp)
+            except AlignedImageDetect.AlgorithmError:
+                continue
         projection_model.generate_models()
         return projection_model
 
