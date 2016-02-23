@@ -1,78 +1,56 @@
 from facerecognition.camera import WebCam, FileCamera
-from facerecognition.featuremodel import FeatureModel
-from facerecognition.imagealgorithms import AlignedImageDetect, AlgorithmError
-
+from facerecognition.facerecmodel import FaceRecognitionModel
+from facerecognition.imagealgorithms import AlignedImageDetect
 from facerecognition.util import display, get_key, clear
+
+
+class FaceException(Exception):
+    pass
 
 
 class FaceRecognitionApp:
     def __init__(self):
 
-        self.cameras = self.create_cameras()
-        self.feature_space = FeatureModel.load("serialised")
+        file_camera = FileCamera("data/original/original_selected_subset")
+        web_cam = WebCam(1)
 
-        self.running = True
-        self.face = None
-        self.frame = None
+        self.cameras = [file_camera, web_cam]
 
-        self.correct = 0
-        self.false = 0
+        self.model = FaceRecognitionModel("serialised", num_images=self.cam.num_images, validation=True)
+        self.display = False
 
     def main(self):
-        while self.running:
-            self.handle_key(get_key(10))
+        while True:
+            try:
+                if self.display:
+                    key = get_key(1)
+                    if key == 27:
+                        return
+                    if key == ord("r"):
+                        self.cameras = self.cameras[1:] + [self.cameras[0]]
 
-            result_set = self.get_result_set()
-            display("Camera Frame", self.frame)
-            display("Extracted Face", self.face, width=400, height=400)
-            if result_set is None:
+                name, frame, face = self.get_face()
+
+                valid = self.model.compare(name, face)
+
+                if self.display:
+                    display("Camera Frame", frame)
+                    display("Extracted Face", face, width=400, height=400)
+
+            except FaceException:
                 continue
 
-            closest_distance = result_set.best_result.distance
-
-            if result_set.match:
-                self.correct += 1
-            else:
-                self.false += 1
-
-            print(
-                "Correct:", self.correct, "\n"
-                "False:", self.false, "\n"
-                "Percentage:", self.correct*100.0/(self.correct+self.false), "%"
-            )
-
-            if closest_distance < 2100 or True:
-                clear()
-                result_set.print()
-
-    def get_result_set(self):
+    def get_face(self):
         try:
-            frame_name, self.frame = self.cam.read()
+            frame_name, frame = self.cam.read()
         except self.cam.FrameException:
-            return None
+            raise FaceException
         try:
-            self.face = AlignedImageDetect.extract(self.frame)
-            result_set = self.feature_space.get_nearest(frame_name, self.face, 10)
-            return result_set
-        except AlgorithmError:
-            return None
+            face = AlignedImageDetect.extract(frame)
+        except AlignedImageDetect.AlgorithmError:
+            raise FaceException
+        return frame_name, frame, face
 
     @property
     def cam(self):
         return self.cameras[0]
-
-    @staticmethod
-    def create_cameras():
-        cameras = list()
-        cameras.append(FileCamera("data/original/original_selected_subset"))
-        cameras.append(WebCam(1))
-
-        cameras.append(FileCamera("other/impostors"))
-
-        return cameras
-
-    def handle_key(self, key):
-        if key == 27:
-            self.running = False
-        if key == ord("r"):
-            self.cameras = self.cameras[1:] + [self.cameras[0]]

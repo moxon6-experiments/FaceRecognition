@@ -29,7 +29,7 @@ class FeatureModel:
 
             self.feature_vector_map[name] = feature_vector
 
-    def get_nearest(self, subject_name, img, num_results=None):
+    def predict_nearest(self, subject_name, img, num_results=None):
         lbp_vector = self.dataset.get_lbp(img)
 
         feature_vector = self.dataset.extract(lbp_vector)

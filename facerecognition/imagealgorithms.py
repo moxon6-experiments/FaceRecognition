@@ -9,12 +9,11 @@ from .config import eye_cascade_path, face_cascade_path
 from facerecognition.uniform import get_uniform_value
 
 
-class AlgorithmError(Exception):
-    pass
-
-
 class ImageAlgorithm:
-    pass
+    class AlgorithmError(Exception):
+        pass
+
+AlgorithmError = ImageAlgorithm.AlgorithmError
 
 
 class EyeDetect(ImageAlgorithm):

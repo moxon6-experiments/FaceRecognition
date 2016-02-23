@@ -15,6 +15,7 @@ class WebCam(Camera):
         self.frame_name = "Camera"
         self.cam = None
         self.camera_id = camera_id
+        self.num_images = None
 
     def read(self):
 
@@ -34,6 +35,7 @@ class FileCamera(Camera):
         self.directory = directory
         self.image_reader = ImageReader(directory)
         self.file_list = self.image_reader.generate_file_list()
+        self.num_images = len(self.file_list)
 
     def read(self):
         try:

@@ -8,6 +8,10 @@ class ResultSet:
         header1 = "Subject Name"
         header2 = "Distance"
         self.results = [Result(x) for x in items]
+
+        # Lower than 1 is incredibly low, therefore likely same image
+        self.results = [result for result in self.results if result.distance > 0.5]
+
         self.table = tabulate(self.results, headers=[header1, header2])
 
     def print(self):
@@ -23,7 +27,7 @@ class ResultSet:
 
     @property
     def match(self):
-        return self[1].name[:5] == self.subject_name[:5] and self[1].distance < 2550
+        return self[0].name[:5] == self.subject_name[:5]
 
 
 class Result:

@@ -6,9 +6,8 @@ class FeatureVector:
         self.vector = vector
 
     def distance(self, other):
-
-        dist = np.linalg.norm(self.vector - other.vector)
-        return (dist*10)**3
+        dist = np.sum(np.abs(self.vector-other.vector))
+        return dist
 
     def save(self, path):
         np.save(path, self.vector)
