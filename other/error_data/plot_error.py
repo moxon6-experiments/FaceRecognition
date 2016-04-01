@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 def error_plot():
-    error = np.load("other/error_points.npy")
+    error = np.load("error_Data/feret_error_data.npy")
     x = error[:, 1].tolist()
     y = error[:, 2].tolist()
 

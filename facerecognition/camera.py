@@ -11,8 +11,8 @@ class Camera:
 
 
 class WebCam(Camera):
-    def __init__(self, camera_id):
-        self.frame_name = "Camera"
+    def __init__(self, camera_id, frame_name="Camera"):
+        self.frame_name = frame_name
         self.cam = None
         self.camera_id = camera_id
         self.num_images = None
